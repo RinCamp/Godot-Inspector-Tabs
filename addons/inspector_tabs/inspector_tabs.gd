@@ -16,6 +16,7 @@ var settings = EditorInterface.get_editor_settings()
 var tab_can_change = false # Stops the TabBar from changing tab
 
 var vertical_mode:bool = true # Tab position
+var vertical_tab_side = 1 # 0:left; 1:Right;
 var tab_style:int
 var property_mode:int
 var merge_abstract_class_tabs:bool
@@ -150,10 +151,14 @@ func update_tabs() -> void:
 		
 		if vertical_mode:
 			# Rotate the image for the vertical tab
-			var rotated_image = load_icon.get_image().duplicate()
-			rotated_image.rotate_90(CLOCKWISE)
-			load_icon = ImageTexture.create_from_image(rotated_image)
-		
+			if vertical_tab_side == 0:
+				var rotated_image = load_icon.get_image().duplicate()
+				rotated_image.rotate_90(CLOCKWISE)
+				load_icon = ImageTexture.create_from_image(rotated_image)
+			else:
+				var rotated_image = load_icon.get_image().duplicate()
+				rotated_image.rotate_90(COUNTERCLOCKWISE)
+				load_icon = ImageTexture.create_from_image(rotated_image)
 			
 		match tab_style:
 			TabStyle.TextOnly:
@@ -224,7 +229,7 @@ func tab_resized():
 
 
 # Change position mode
-func change_vertical_mode(mode:bool):
+func change_vertical_mode(mode:bool = vertical_mode):
 	vertical_mode = mode
 	if tab_bar:
 		tab_bar.queue_free()
@@ -257,8 +262,11 @@ func change_vertical_mode(mode:bool):
 		property_container.size_flags_horizontal = Control.SIZE_SHRINK_END
 		favorite_container.size_flags_horizontal = Control.SIZE_SHRINK_END
 		viewer_container.size_flags_horizontal = Control.SIZE_SHRINK_END
-		tab_bar.layout_direction =Control.LAYOUT_DIRECTION_RTL
 		tab_bar.top_level = true
+		if vertical_tab_side == 0:
+			tab_bar.layout_direction =Control.LAYOUT_DIRECTION_RTL
+		else:
+			tab_bar.layout_direction =Control.LAYOUT_DIRECTION_LTR
 	else:
 		property_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		favorite_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
