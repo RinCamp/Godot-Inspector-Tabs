@@ -63,8 +63,9 @@ func _parse_category(object: Object, category: String) -> void:
 	# reset the list if its the first category
 	if categories_finish:
 		parse_begin(object)
-
-	current_parse_category = category
+	
+	if current_parse_category != "Node": # This line is needed because when selecting multiple nodes the refcounted class will be the last tab.
+		current_parse_category = category
 	
 # Finished getting inspector categories
 func _parse_end(object: Object) -> void:
@@ -83,12 +84,16 @@ func _parse_end(object: Object) -> void:
 				
 			if category.split('"').size() > 1:
 				category = category.split('"')[1]
-			
+
 			# Add it to the list of categories and tabs
 			if is_new_tab(is_base_class(category),category):
 				tabs.append(category)
 			categories.append(category)
-	
+		elif categories.size() == 0:# If theres properties at the top of the inspector without its own category.
+			# Add it to the list of categories and tabs
+			var category = "Unknown"
+			tabs.append(category)
+			categories.append(category)
 	categories_finish = true
 	update_tabs() # load tab
 	tab_can_change = true
@@ -124,6 +129,8 @@ func get_class_icon(c_name:String) -> ImageTexture:
 	
 	if c_name.ends_with(".gd"):# GDScript Icon
 		load_icon = base_control.get_theme_icon("GDScript", "EditorIcons")
+	if c_name == "RefCounted":# RefCounted Icon
+		load_icon = base_control.get_theme_icon("Object", "EditorIcons")
 	elif ClassDB.class_exists(c_name): # Get editor icon
 		load_icon = base_control.get_theme_icon(c_name, "EditorIcons")
 	else:
@@ -181,6 +188,11 @@ func tab_clicked(tab: int) -> void:
 				category_idx += 1
 				if is_new_tab(is_base_class(categories[category_idx]),categories[category_idx]):
 					tab_idx += 1
+					
+			elif tab_idx == -1: # If theres properties at the top of the inspector without its own category.
+				category_idx += 1
+				if is_new_tab(is_base_class(categories[category_idx]),categories[category_idx]):
+					tab_idx += 1
 			if tab_idx != tab:
 				i.visible = false
 			else:
@@ -198,7 +210,9 @@ func tab_clicked(tab: int) -> void:
 				if tab_idx == tab:
 					property_scroll_bar.value = (i.position.y+property_container.position.y)/EditorInterface.get_inspector().get_node("@VBoxContainer@6472").size.y*property_scroll_bar.max_value
 					break
-
+			elif tab_idx == -1 and tab == 0: # If theres properties at the top of the inspector without its own category.
+				property_scroll_bar.value = 0
+				break
 func is_new_tab(is_base_class:bool,category:String) -> bool:
 	if merge_abstract_class_tabs:
 		if ClassDB.class_exists(category) and not ClassDB.can_instantiate(category):
@@ -334,3 +348,6 @@ func property_scrolling():
 			category_idx += 1
 			if is_new_tab(is_base_class(categories[category_idx]),categories[category_idx]):
 				tab_idx += 1
+		elif tab_idx == -1: # If theres properties at the top of the inspector without its own category.
+			category_idx += 1
+			tab_idx += 1
