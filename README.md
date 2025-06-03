@@ -17,7 +17,7 @@ Vertical layout           |  Horizontal layout
 - Favorite property will be shown in all tabs.
 
 # Known issues
-- Resizing the inspector dock is kind of glitchy especially if the dock is made floating.
+- When opening your project, the `search help` window will pop up for a split second. This is to load the GDExtension node icons.
 
 # Installing
 You can install it from the [asset library](https://godotengine.org/asset-library/asset/3951).
