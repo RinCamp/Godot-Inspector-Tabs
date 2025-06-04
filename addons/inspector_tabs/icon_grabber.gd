@@ -3,7 +3,7 @@ extends Node
 
 var script_editor
 
-var editor_help_search
+var editor_help_search:Window
 var tree:Tree
 var search_bar:LineEdit
 var open_help_button:Button
@@ -49,7 +49,11 @@ func update_icon_list():
 	# wait until tree loaded.
 	while tree.get_root() == null:
 		await script_editor.get_tree().process_frame
-		
+	
+	# wait until tree items is fully loaded.
+	while is_tree_fully_loaded(tree) != true:
+		await script_editor.get_tree().process_frame
+	
 	# Get the GDExtension icons
 	grab_icon(tree.get_root())
 	
@@ -60,10 +64,18 @@ func update_icon_list():
 	# Reset editor help search
 	editor_help_search.hide()
 	filter_option_button.selected = current_filter
-
+	
+func is_tree_fully_loaded(tree:Tree) -> bool:
+	for item in tree.get_root().get_children():
+		for i in tree.columns:
+			if item.get_text(i) == "Vector4i":
+				return true
+	
+	return false
+	
 func grab_icon(from_item:TreeItem):
 	for item:TreeItem in from_item.get_children():
-		if item.get_text(1) == "Class":
+		#if item.get_text(1) == "Class":
 			var c_name = item.get_text(0)
 			
 			# If it at the end of the tree
