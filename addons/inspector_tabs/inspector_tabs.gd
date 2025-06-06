@@ -86,9 +86,10 @@ func _parse_end(object: Object) -> void:
 				category = category.split('"')[1]
 
 			# Add it to the list of categories and tabs
+			categories.append(category)
 			if is_new_tab(category):
 				tabs.append(category)
-			categories.append(category)
+
 		elif categories.size() == 0:# If theres properties at the top of the inspector without its own category.
 			# Add it to the list of categories and tabs
 			var category = "Unknown"
@@ -213,9 +214,12 @@ func tab_clicked(tab: int) -> void:
 			elif tab_idx == -1 and tab == 0: # If theres properties at the top of the inspector without its own category.
 				property_scroll_bar.value = 0
 				break
+
 func is_new_tab(category:String) -> bool:
 	if merge_abstract_class_tabs:
 		if ClassDB.class_exists(category) and not ClassDB.can_instantiate(category):
+			if categories[0] == category:
+				return true
 			return false
 	return true
 
