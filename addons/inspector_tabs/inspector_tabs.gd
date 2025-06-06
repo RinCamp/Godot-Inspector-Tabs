@@ -86,7 +86,7 @@ func _parse_end(object: Object) -> void:
 				category = category.split('"')[1]
 
 			# Add it to the list of categories and tabs
-			if is_new_tab(is_base_class(category),category):
+			if is_new_tab(category):
 				tabs.append(category)
 			categories.append(category)
 		elif categories.size() == 0:# If theres properties at the top of the inspector without its own category.
@@ -186,12 +186,12 @@ func tab_clicked(tab: int) -> void:
 		for i in property_container.get_children():
 			if i.get_class() == "EditorInspectorCategory":
 				category_idx += 1
-				if is_new_tab(is_base_class(categories[category_idx]),categories[category_idx]):
+				if is_new_tab(categories[category_idx]):
 					tab_idx += 1
 					
 			elif tab_idx == -1: # If theres properties at the top of the inspector without its own category.
 				category_idx += 1
-				if is_new_tab(is_base_class(categories[category_idx]),categories[category_idx]):
+				if is_new_tab(categories[category_idx]):
 					tab_idx += 1
 			if tab_idx != tab:
 				i.visible = false
@@ -205,7 +205,7 @@ func tab_clicked(tab: int) -> void:
 		for i in property_container.get_children():
 			if i.get_class() == "EditorInspectorCategory":
 				category_idx += 1
-				if is_new_tab(is_base_class(categories[category_idx]),categories[category_idx]):
+				if is_new_tab(categories[category_idx]):
 					tab_idx += 1
 				if tab_idx == tab:
 					property_scroll_bar.value = (i.position.y+property_container.position.y)/EditorInterface.get_inspector().get_node("@VBoxContainer@6472").size.y*property_scroll_bar.max_value
@@ -213,7 +213,7 @@ func tab_clicked(tab: int) -> void:
 			elif tab_idx == -1 and tab == 0: # If theres properties at the top of the inspector without its own category.
 				property_scroll_bar.value = 0
 				break
-func is_new_tab(is_base_class:bool,category:String) -> bool:
+func is_new_tab(category:String) -> bool:
 	if merge_abstract_class_tabs:
 		if ClassDB.class_exists(category) and not ClassDB.can_instantiate(category):
 			return false
@@ -346,7 +346,7 @@ func property_scrolling():
 				tab_bar.current_tab = max(tab_idx,0)
 				break
 			category_idx += 1
-			if is_new_tab(is_base_class(categories[category_idx]),categories[category_idx]):
+			if is_new_tab(categories[category_idx]):
 				tab_idx += 1
 		elif tab_idx == -1: # If theres properties at the top of the inspector without its own category.
 			category_idx += 1
