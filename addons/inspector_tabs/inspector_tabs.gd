@@ -154,7 +154,7 @@ func get_class_icon(c_name:String) -> ImageTexture:
 # add tabs
 func update_tabs() -> void:
 	tab_bar.clear_tabs()
-	for tab in tabs:
+	for tab:String in tabs:
 		var load_icon = get_class_icon(tab)
 		
 		if vertical_mode:
@@ -167,15 +167,16 @@ func update_tabs() -> void:
 				var rotated_image = load_icon.get_image().duplicate()
 				rotated_image.rotate_90(COUNTERCLOCKWISE)
 				load_icon = ImageTexture.create_from_image(rotated_image)
-			
+		
+		var tab_name = tab.split("/")[-1]
 		match tab_style:
 			TabStyle.TextOnly:
-				tab_bar.add_tab(tab,null)
+				tab_bar.add_tab(tab_name,null)
 			TabStyle.IconOnly:
 				tab_bar.add_tab("",load_icon)
 			TabStyle.TextAndIcon:
-				tab_bar.add_tab(tab,load_icon)
-		tab_bar.set_tab_tooltip(tab_bar.tab_count-1,tab)
+				tab_bar.add_tab(tab_name,load_icon)
+		tab_bar.set_tab_tooltip(tab_bar.tab_count-1,tab_name)
 
 func tab_clicked(tab: int) -> void:
 	if is_filtering: return
