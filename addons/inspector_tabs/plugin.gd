@@ -28,16 +28,16 @@ func _enter_tree():
 
 	load_settings()
 
-	var tab_pos = settings.get("interface/inspector/tab_layout")
+	var tab_pos = settings.get("inspector_tabs/tab_layout")
 	if tab_pos != null:
 		if tab_pos == 0:
 			plugin.change_vertical_mode(false)
 		else:
 			plugin.change_vertical_mode(true)
 	
-	plugin.tab_style = settings.get("interface/inspector/tab_style")
-	plugin.property_mode = settings.get("interface/inspector/tab_property_mode")
-	plugin.merge_abstract_class_tabs = settings.get("interface/inspector/merge_abstract_class_tabs")
+	plugin.tab_style = settings.get("inspector_tabs/tab_style")
+	plugin.property_mode = settings.get("inspector_tabs/tab_property_mode")
+	plugin.merge_abstract_class_tabs = settings.get("inspector_tabs/merge_abstract_class_tabs")
 	
 	
 	settings.settings_changed.connect(plugin.settings_changed)
@@ -53,49 +53,49 @@ func load_settings():
 		print("ERROR LOADING SETTINGS FILE")
 
 	
-	settings.set("interface/inspector/tab_layout", config.get_value("Settings", "tab layout",1))
+	settings.set("inspector_tabs/tab_layout", config.get_value("Settings", "tab layout",1))
 	
 	var property_info = {
-		"name": "interface/inspector/tab_layout",
+		"name": "inspector_tabs/tab_layout",
 		"type": TYPE_INT,
 		"hint": PROPERTY_HINT_ENUM,
 		"hint_string": "Horizontal,Vertical",
 	}
 	settings.add_property_info(property_info)
 
-	settings.set("interface/inspector/tab_style", config.get_value("Settings", "tab style",1))
+	settings.set("inspector_tabs/tab_style", config.get_value("Settings", "tab style",1))
 	
 	property_info = {
-		"name": "interface/inspector/tab_style",
+		"name": "inspector_tabs/tab_style",
 		"type": TYPE_INT,
 		"hint": PROPERTY_HINT_ENUM,
 		"hint_string": "Text Only,Icon Only,Text and Icon",
 	}
 	settings.add_property_info(property_info)
 	
-	settings.set("interface/inspector/tab_property_mode", config.get_value("Settings", "tab property mode",0))
+	settings.set("inspector_tabs/tab_property_mode", config.get_value("Settings", "tab property mode",0))
 	
 	property_info = {
-		"name": "interface/inspector/tab_property_mode",
+		"name": "inspector_tabs/tab_property_mode",
 		"type": TYPE_INT,
 		"hint": PROPERTY_HINT_ENUM,
 		"hint_string": "Tabbed,Jump Scroll",
 	}
 	settings.add_property_info(property_info)
 	
-	settings.set("interface/inspector/merge_abstract_class_tabs", config.get_value("Settings", "merge abstract class tabs",true))
+	settings.set("inspector_tabs/merge_abstract_class_tabs", config.get_value("Settings", "merge abstract class tabs",true))
 	
 	property_info = {
-		"name": "interface/inspector/merge_abstract_class_tabs",
+		"name": "inspector_tabs/merge_abstract_class_tabs",
 		"type": TYPE_BOOL,
 	}
 	settings.add_property_info(property_info)
 	
 func _exit_tree():
-	settings.set("interface/inspector/tab_layout", null)
-	settings.set("interface/inspector/tab_style", null)
-	settings.set("interface/inspector/tab_property_mode", null)
-	settings.set("interface/inspector/merge_abstract_class_tabs", null)
+	settings.set("inspector_tabs/tab_layout", null)
+	settings.set("inspector_tabs/tab_style", null)
+	settings.set("inspector_tabs/tab_property_mode", null)
+	settings.set("inspector_tabs/merge_abstract_class_tabs", null)
 	
 	plugin.property_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	plugin.favorite_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL

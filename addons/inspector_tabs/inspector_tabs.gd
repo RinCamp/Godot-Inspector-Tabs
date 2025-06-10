@@ -300,7 +300,7 @@ func change_vertical_mode(mode:bool = vertical_mode):
 			
 
 func settings_changed() -> void:
-	var tab_pos = settings.get("interface/inspector/tab_layout")
+	var tab_pos = settings.get("inspector_tabs/tab_layout")
 	if tab_pos != null:
 		if tab_pos == 0:
 			if vertical_mode != false:
@@ -308,15 +308,15 @@ func settings_changed() -> void:
 		else:
 			if vertical_mode != true:
 				change_vertical_mode(true)
-	var style = settings.get("interface/inspector/tab_style")
+	var style = settings.get("inspector_tabs/tab_style")
 	if style != null:
 		if tab_style != style:
 			tab_style = style
-	var prop_mode = settings.get("interface/inspector/tab_property_mode")
+	var prop_mode = settings.get("inspector_tabs/tab_property_mode")
 	if prop_mode != null:
 		if property_mode != prop_mode:
 			property_mode = prop_mode
-	var merge_class = settings.get("interface/inspector/merge_abstract_class_tabs")
+	var merge_class = settings.get("inspector_tabs/merge_abstract_class_tabs")
 	if merge_class != null:
 		if merge_abstract_class_tabs != merge_class:
 			merge_abstract_class_tabs = merge_class
