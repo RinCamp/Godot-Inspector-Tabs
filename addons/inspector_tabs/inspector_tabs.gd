@@ -118,7 +118,22 @@ func is_base_class(c_name:String) -> bool:
 			return false
 	return true
 	
-	
+
+func get_script_icon(script_path:String) -> Texture2D:
+	var file := FileAccess.open(script_path, FileAccess.READ)
+	if not file:
+		return null
+	while not file.eof_reached():
+		var line := file.get_line().strip_edges()
+		if line.begins_with("@icon("):
+			var start = line.find("\"") + 1
+			var end = line.rfind("\"")
+			if start > 0 and end > start:
+				var texture:Texture2D = load(line.substr(start, end - start))
+				var image = texture.get_image()
+				image.resize(UNKNOWN_ICON.get_width(),UNKNOWN_ICON.get_height())
+				return ImageTexture.create_from_image(image)
+	return null
 func get_class_icon(c_name:String) -> Texture2D:
 	
 	#Get GDExtension Icon
@@ -155,7 +170,11 @@ func get_class_icon(c_name:String) -> Texture2D:
 func update_tabs() -> void:
 	tab_bar.clear_tabs()
 	for tab:String in tabs:
-		var load_icon = get_class_icon(tab)
+		var load_icon:Texture2D
+		if tab.ends_with(".gd"):
+			load_icon = get_script_icon(tab)
+		if load_icon == null:
+			load_icon = get_class_icon(tab)
 		
 		if vertical_mode:
 			# Rotate the image for the vertical tab
