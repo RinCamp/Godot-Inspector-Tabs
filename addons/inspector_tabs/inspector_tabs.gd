@@ -120,6 +120,9 @@ func is_base_class(c_name:String) -> bool:
 	
 
 func get_script_icon(script_path:String) -> Texture2D:
+	if !script_path.begins_with("res://"):
+		script_path = "res://" + script_path
+
 	var file := FileAccess.open(script_path, FileAccess.READ)
 	if not file:
 		return null
@@ -129,7 +132,12 @@ func get_script_icon(script_path:String) -> Texture2D:
 			var start = line.find("\"") + 1
 			var end = line.rfind("\"")
 			if start > 0 and end > start:
-				var texture:Texture2D = load(line.substr(start, end - start))
+				var img_path = line.substr(start, end - start)
+				
+				if !img_path.begins_with("res://"): ## If path is absolute
+					img_path = script_path.substr(0, script_path.rfind("/")) + "/" + img_path
+				
+				var texture: Texture2D = load(img_path)
 				var image = texture.get_image()
 				image.resize(UNKNOWN_ICON.get_width(),UNKNOWN_ICON.get_height())
 				return ImageTexture.create_from_image(image)
