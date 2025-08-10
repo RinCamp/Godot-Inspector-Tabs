@@ -20,7 +20,6 @@ func _enter_tree():
 	plugin.property_scroll_bar.scrolling.connect(plugin.property_scrolling)
 	plugin.UNKNOWN_ICON = EditorInterface.get_base_control().get_theme_icon("", "EditorIcons")
 	
-	plugin.icon_grabber = preload("uid://doo2vh6otbog4").new()
 	
 	
 	filter_bar = EditorInterface.get_inspector().get_parent().get_child(2).get_child(0)
@@ -42,8 +41,6 @@ func _enter_tree():
 	
 	settings.settings_changed.connect(plugin.settings_changed)
 
-func _ready() -> void:
-	plugin.icon_grabber.update_icon_list()
 func load_settings():
 	var config = ConfigFile.new()
 	# Load data from a file.
