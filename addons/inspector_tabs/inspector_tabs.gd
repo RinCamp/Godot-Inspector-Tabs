@@ -407,6 +407,8 @@ func get_script_class_icon(tab) -> Texture2D:
 			var icon = ImageTexture.create_from_image(image)
 			icon_cache = {tab:icon}
 			return icon
+
+	## Icon for @export_category()
 	if vertical_mode:
 		return base_control.get_theme_icon("ArrowUp", "EditorIcons")
 	return base_control.get_theme_icon("ArrowLeft", "EditorIcons")
