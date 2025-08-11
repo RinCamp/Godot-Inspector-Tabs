@@ -5,6 +5,7 @@ const KEY_TAB_STYLE = "inspector_tabs/tab_style"
 const KEY_TAB_PROPERTY_MODE = "inspector_tabs/tab_property_mode"
 const KEY_MERGE_ABSTRACT_CLASS_TABST = "inspector_tabs/merge_abstract_class_tabs"
 
+
 enum TabLayouts{
     Horizontal,
     Vertical,
@@ -513,7 +514,11 @@ func get_script_class_icon(tab) -> Texture2D:
     for class_info in ProjectSettings.get_global_class_list():
         if class_info["class"] == tab:
             if ResourceLoader.exists(class_info["icon"]) == false:
-                break
+                var _script = load(class_info["path"]) as GDScript
+                var _node = _script.new() as Node
+                var _name = _node.get_class()
+                _node.free()
+                return get_tab_icon(_name)
 
             var texture: Texture2D = ResourceLoader.load(class_info["icon"])
             var image = texture.get_image()
