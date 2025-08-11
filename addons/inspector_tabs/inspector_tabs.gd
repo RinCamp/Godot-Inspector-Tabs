@@ -53,37 +53,37 @@ func parse_begin(object: Object) -> void:
 	categories_finish = false
 	categories.clear()
 	tabs.clear()
-	
+
 	tab_can_change = false
 	tab_bar.clear_tabs()
 	object_custom_classes.clear()
-	
+
 # getting the category from the inspector
 func _parse_category(object: Object, category: String) -> void:
 	if category == "Atlas": return # Not sure what class this is. But it seems to break things.
-		
+
 	# reset the list if its the first category
 	if categories_finish:
 		parse_begin(object)
-	
+
 	if current_parse_category != "Node": # This line is needed because when selecting multiple nodes the refcounted class will be the last tab.
 		current_parse_category = category
-	
+
 # Finished getting inspector categories
 func _parse_end(object: Object) -> void:
 	if current_parse_category != "Node": return # False finish
 	current_parse_category = ""
-	
+
 	for i in property_container.get_children():
 		if i.get_class() == "EditorInspectorCategory":
-			
+
 			# Get Node Name
 			var category = i.get("tooltip_text").split("|")
 			if category.size() > 1:
 				category = category[1]
 			else:
 				category = category[0]
-				
+
 			if category.split('"').size() > 1:
 				category = category.split('"')[1]
 
@@ -109,9 +109,9 @@ func _parse_end(object: Object) -> void:
 	else:
 		tab_clicked(tab)
 		tab_bar.current_tab = tab
-	
+
 	tab_resized()
-	
+
 # Is it not a custom class
 func is_base_class(c_name:String) -> bool:
 	if c_name.contains("."):return false
@@ -119,7 +119,7 @@ func is_base_class(c_name:String) -> bool:
 		if list.class == c_name:
 			return false
 	return true
-	
+
 
 func get_script_icon(script_path:String) -> Texture2D:
 	if !script_path.begins_with("res://"):
@@ -135,10 +135,10 @@ func get_script_icon(script_path:String) -> Texture2D:
 			var end = line.rfind("\"")
 			if start > 0 and end > start:
 				var img_path = line.substr(start, end - start)
-				
+
 				if !img_path.begins_with("res://"): ## If path is absolute
 					img_path = script_path.substr(0, script_path.rfind("/")) + "/" + img_path
-				
+
 				var texture: Texture2D = load(img_path)
 				var image = texture.get_image()
 				image.resize(UNKNOWN_ICON.get_width(),UNKNOWN_ICON.get_height())
@@ -150,20 +150,9 @@ func update_tabs() -> void:
 	tab_bar.clear_tabs()
 	for tab:String in tabs:
 		## Get an icon for the tab.
-		var load_icon:Texture2D
-		if tab.ends_with(".gd"):
-			load_icon = get_script_icon(tab) ## Get script custom icon or the GDScript icon
-		elif ClassDB.class_exists(tab):
-			if ClassDB.class_get_api_type(tab) == ClassDB.APIType.API_EXTENSION:
-				load_icon = get_extension_class_icon(tab)  ## Get GDExtension node icon
-			else:
-				load_icon = base_control.get_theme_icon(tab, "EditorIcons") ## Get editor node icon
-		else:
-			load_icon = get_script_class_icon(tab) ## Get script class icon
-			
-		if load_icon == UNKNOWN_ICON:
-			load_icon = base_control.get_theme_icon("NodeDisabled", "EditorIcons")
-			
+		var load_icon = get_tab_icon(tab)
+		var tab_name = tab.split("/")[-1]
+
 		if vertical_mode:
 			# Rotate the image for the vertical tab
 			if vertical_tab_side == 0:
@@ -174,8 +163,7 @@ func update_tabs() -> void:
 				var rotated_image = load_icon.get_image().duplicate()
 				rotated_image.rotate_90(COUNTERCLOCKWISE)
 				load_icon = ImageTexture.create_from_image(rotated_image)
-		
-		var tab_name = tab.split("/")[-1]
+				
 		match tab_style:
 			TabStyle.TextOnly:
 				tab_bar.add_tab(tab_name,null)
@@ -183,6 +171,7 @@ func update_tabs() -> void:
 				tab_bar.add_tab("",load_icon)
 			TabStyle.TextAndIcon:
 				tab_bar.add_tab(tab_name,load_icon)
+				
 		tab_bar.set_tab_tooltip(tab_bar.tab_count-1,tab_name)
 
 func tab_clicked(tab: int) -> void:
@@ -190,14 +179,14 @@ func tab_clicked(tab: int) -> void:
 	if property_mode == 0: # Tabbed
 		var category_idx = -1
 		var tab_idx = -1
-		
+
 		# Show nececary properties
 		for i in property_container.get_children():
 			if i.get_class() == "EditorInspectorCategory":
 				category_idx += 1
 				if is_new_tab(categories[category_idx]):
 					tab_idx += 1
-					
+
 			elif tab_idx == -1: # If theres properties at the top of the inspector without its own category.
 				category_idx += 1
 				if is_new_tab(categories[category_idx]):
@@ -209,7 +198,7 @@ func tab_clicked(tab: int) -> void:
 	elif property_mode == 1: # Jump Scroll
 		var category_idx = -1
 		var tab_idx = -1
-		
+
 		# Show nececary properties
 		for i in property_container.get_children():
 			if i.get_class() == "EditorInspectorCategory":
@@ -243,11 +232,11 @@ func filter_text_changed(text:String):
 		is_filtering = false
 		tab_clicked(tab_bar.current_tab)
 
-	
+
 func tab_selected(tab):
 	if tab_can_change:
 		current_category = tabs[tab]
-		
+
 func tab_resized():
 	if not vertical_mode:
 		if tabs.size() != 0:
@@ -275,9 +264,9 @@ func change_vertical_mode(mode:bool = vertical_mode):
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	var inspector = EditorInterface.get_inspector().get_parent()
-	
+
 	tab_bar.tab_clicked.connect(tab_clicked)
-	
+
 	if not vertical_mode:
 		inspector.add_child(tab_bar)
 		inspector.move_child(tab_bar,3)
@@ -304,7 +293,7 @@ func change_vertical_mode(mode:bool = vertical_mode):
 	tab_bar.resized.connect(tab_resized)
 	tab_bar.tab_selected.connect(tab_selected)
 	tab_resized()
-			
+
 
 func settings_changed() -> void:
 	var tab_pos = settings.get("inspector_tabs/tab_layout")
@@ -327,7 +316,7 @@ func settings_changed() -> void:
 	if merge_class != null:
 		if merge_abstract_class_tabs != merge_class:
 			merge_abstract_class_tabs = merge_class
-			
+
 	if tab_pos != null and style != null and prop_mode != null and merge_class != null:
 
 		#Save settings
@@ -366,6 +355,39 @@ func property_scrolling():
 			category_idx += 1
 			tab_idx += 1
 
+func get_tab_icon(tab) -> Texture2D:
+	var load_icon : Texture2D
+
+	if tab.ends_with(".gd"):
+		load_icon = get_script_icon(tab) ## Get script custom icon or the GDScript icon
+	elif ClassDB.class_exists(tab):
+		if ClassDB.class_get_api_type(tab) == ClassDB.APIType.API_EXTENSION:
+			load_icon = get_extension_class_icon(tab)  ## Get GDExtension node icon
+		else:
+			load_icon = base_control.get_theme_icon(tab, "EditorIcons") ## Get editor node icon
+	else:
+		load_icon = get_script_class_icon(tab) ## Get script class icon
+
+	if load_icon == UNKNOWN_ICON:
+		load_icon = base_control.get_theme_icon("NodeDisabled", "EditorIcons")
+
+	return load_icon
+
+
+func find_custom_class_name(_script:GDScript) -> String:
+	var _name : String = ""
+	if _script.get_base_script():
+		_name = _script.get_base_script().get_global_name()
+		for class_info in ProjectSettings.get_global_class_list():
+			if class_info["class"] == _name:
+				if ResourceLoader.exists(class_info["icon"]) == false:
+					return find_custom_class_name(load(class_info["path"]))
+	else:
+		var _node = _script.new() as Node
+		_name = _node.get_class()
+		_node.free()
+	return _name
+
 
 func get_script_class_icon(tab) -> Texture2D:
 	if icon_cache.has(tab):
@@ -374,7 +396,10 @@ func get_script_class_icon(tab) -> Texture2D:
 	for class_info in ProjectSettings.get_global_class_list():
 		if class_info["class"] == tab:
 			if ResourceLoader.exists(class_info["icon"]) == false:
-				break
+				var cls_name = find_custom_class_name(load(class_info["path"]))
+				return get_tab_icon(cls_name)
+
+
 			var texture: Texture2D = ResourceLoader.load(class_info["icon"])
 			var image = texture.get_image()
 			image.resize(UNKNOWN_ICON.get_width(),UNKNOWN_ICON.get_height())
@@ -382,14 +407,15 @@ func get_script_class_icon(tab) -> Texture2D:
 			var icon = ImageTexture.create_from_image(image)
 			icon_cache = {tab:icon}
 			return icon
-
-	return base_control.get_theme_icon("NodeDisabled", "EditorIcons")
+	if vertical_mode:
+		return base_control.get_theme_icon("ArrowUp", "EditorIcons")
+	return base_control.get_theme_icon("ArrowLeft", "EditorIcons")
 
 
 func get_extension_class_icon(tab) -> Texture2D:
 	if icon_cache.has(tab):
 		return icon_cache.get(tab)
-		
+
 	for i in GDExtensionManager.get_loaded_extensions():
 		var cfg = load_gdextension_config(i)
 		var icons = cfg.get("icons")
@@ -403,7 +429,7 @@ func get_extension_class_icon(tab) -> Texture2D:
 				var icon = ImageTexture.create_from_image(image)
 				icon_cache = {tab : icon}
 				return icon
-	
+
 	return base_control.get_theme_icon("NodeDisabled", "EditorIcons")
 
 
