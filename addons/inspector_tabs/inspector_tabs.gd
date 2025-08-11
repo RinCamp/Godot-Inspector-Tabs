@@ -227,6 +227,7 @@ func change_vertical_mode(mode:bool = vertical_mode):
     panel.size_flags_vertical = Control.SIZE_EXPAND
     panel.show_behind_parent = true
     panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    panel.set_anchors_preset(Control.PRESET_FULL_RECT)
 
     tab_bar = TabBar.new()
     tab_bar.clip_tabs = false
@@ -245,7 +246,6 @@ func change_vertical_mode(mode:bool = vertical_mode):
     update_tabs()
 
     scroll_area = ScrollContainer.new()
-    scroll_area.follow_focus = true
     scroll_area.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
     scroll_area.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
 
