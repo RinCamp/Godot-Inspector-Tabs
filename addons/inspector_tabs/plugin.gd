@@ -9,7 +9,7 @@ var settings = EditorInterface.get_editor_settings()
 
 
 func _enter_tree():
-	plugin = preload("uid://d3uqhh42fvfuy").new()
+	plugin = preload("inspector_tabs.gd").new()
 	
 	add_inspector_plugin(plugin)
 	

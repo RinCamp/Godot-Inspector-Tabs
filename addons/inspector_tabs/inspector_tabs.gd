@@ -144,38 +144,6 @@ func get_script_icon(script_path:String) -> Texture2D:
 				image.resize(UNKNOWN_ICON.get_width(),UNKNOWN_ICON.get_height())
 				return ImageTexture.create_from_image(image)
 	return base_control.get_theme_icon("GDScript", "EditorIcons")
-	
-func get_class_icon(c_name:String) -> Texture2D:
-	
-	#Get GDExtension Icon
-	var load_icon = icon_grabber.get_icon(c_name)
-	if load_icon != null:
-		return load_icon
-	load_icon = UNKNOWN_ICON
-	
-	
-	if c_name.ends_with(".gd"):# GDScript Icon
-		load_icon = base_control.get_theme_icon("GDScript", "EditorIcons")
-	if c_name == "RefCounted":# RefCounted Icon
-		load_icon = base_control.get_theme_icon("Object", "EditorIcons")
-	elif ClassDB.class_exists(c_name): # Get editor icon
-		load_icon = base_control.get_theme_icon(c_name, "EditorIcons")
-	else:
-		# Get custom class icon
-		for list in ProjectSettings.get_global_class_list():
-			if list.class == c_name:
-				if list.icon != "":
-					var texture:Texture2D = load(list.icon)
-					var image = texture.get_image()
-					image.resize(load_icon.get_width(),load_icon.get_height())
-					return ImageTexture.create_from_image(image)
-				break
-
-	if load_icon != UNKNOWN_ICON:
-		return load_icon # Return if icon is not unknown
-	
-	# if icon not found just use the node disabled icon
-	return base_control.get_theme_icon("NodeDisabled", "EditorIcons")
 
 # add tabs
 func update_tabs() -> void:
