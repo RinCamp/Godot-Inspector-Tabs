@@ -507,6 +507,21 @@ func get_tab_icon(tab) -> Texture2D:
     return load_icon
 
 
+func get_custom_class_name(_script:GDScript) -> String:
+    var _name : String = ""
+    if _script.get_base_script():
+        _name = _script.get_base_script().get_global_name()
+        for class_info in ProjectSettings.get_global_class_list():
+            if class_info["class"] == _name:
+                if ResourceLoader.exists(class_info["icon"]) == false:
+                    return get_custom_class_name(load(class_info["path"]))
+    else:
+        var _node = _script.new() as Node
+        _name = _node.get_class()
+        _node.free()
+    return _name
+
+
 func get_script_class_icon(tab) -> Texture2D:
     if icon_cache.has(tab):
         return icon_cache.get(tab)
@@ -514,11 +529,8 @@ func get_script_class_icon(tab) -> Texture2D:
     for class_info in ProjectSettings.get_global_class_list():
         if class_info["class"] == tab:
             if ResourceLoader.exists(class_info["icon"]) == false:
-                var _script = load(class_info["path"]) as GDScript
-                var _node = _script.new() as Node
-                var _name = _node.get_class()
-                _node.free()
-                return get_tab_icon(_name)
+                var cls_name = get_custom_class_name(load(class_info["path"]))
+                return get_tab_icon(cls_name)
 
             var texture: Texture2D = ResourceLoader.load(class_info["icon"])
             var image = texture.get_image()
@@ -527,8 +539,9 @@ func get_script_class_icon(tab) -> Texture2D:
             var icon = ImageTexture.create_from_image(image)
             icon_cache = {tab:icon}
             return icon
-
-    return base_control.get_theme_icon("NodeDisabled", "EditorIcons")
+    if vertical_mode:
+        return base_control.get_theme_icon("ArrowUp", "EditorIcons")
+    return base_control.get_theme_icon("ArrowLeft", "EditorIcons")
 
 
 func get_extension_class_icon(tab) -> Texture2D:
