@@ -1,28 +1,25 @@
-# Godot Inspector Tabs
-Godot add-on for spliting the inspector property classes into its own tabs. So that its shorter and require less scrolling.
-There's also a jump-scroll option that didn't hide the properties in different tabs.
+# Godot 检查器标签页 (这是一个分支版本)
+Godot 编辑器插件，用于将检查器属性分类到独立标签页中，从而缩短面板长度，减少滚动操作。
+还支持跳转滚动模式，该模式下不同标签页的属性不会隐藏。
 
-Vertical layout           |  Horizontal layout
+垂直模式           |  水平模式
 :-------------------------:|:-------------------------:
-![](https://github.com/user-attachments/assets/fc5455d2-c48d-4e1f-b51f-4c09e2d4eb83)  |  ![](https://github.com/user-attachments/assets/e2849982-a57f-46d6-bcfa-c38676032b9d)
+![V](https://github.com/user-attachments/assets/71dd6964-cc7f-4bcc-bc43-a553e60d671e)  |  ![H](https://github.com/user-attachments/assets/588bfcf6-90f6-42be-ae2f-52c613b35f1b)
 
-# Features
-- An option for horizontal/vertical tab layout. (Can be changed in the `editor_settings/inspector_tabs/tab_layout`. Make sure advanced settings is on)
-- An option to add/remove text and icon on the tabs. (Can be changed in the `editor_settings/inspector_tabs/tab_style`)
-- A Jump-scroll option that didn't hide the properties in different tabs. (Can be changed in the `editor_settings/inspector_tabs/tab_property_mode`)
-- An option to put abstract class into its child tab instead of its own. so that its easier to find. (Can be changed in the `editor_settings/inspector_tabs/merge_abstract_class_tabs`)
-- The built-in property filter will search for properties on all tabs.
-- Settings is synced to all projects.
-- Support custom script classes and GDExtension classes.
-- Favorite property will be shown in all tabs.
 
-# Known issues
-- When opening your project, the `search help` window will pop up for a split second. This is to load the GDExtension node icons.
 
-# Installing
-You can install it from the [asset library](https://godotengine.org/asset-library/asset/3951).
+- 支持水平/垂直标签页布局（项目设置/inspector_tabs/tab_layout）
+- 可自定义标签页是否显示文字和图标（项目设置/inspector_tabs/tab_style）
+- 跳转滚动模式：不同标签页的属性不会隐藏（项目设置/inspector_tabs/tab_property_mode）
+- 可将抽象类属性合并到子类标签页，便于查找（项目设置/inspector_tabs/merge_abstract_class_tabs）
+- 内置属性过滤器支持跨标签页搜索
+- 支持自定义脚本类和GDExtension类
+- 收藏的属性会在所有标签页中显示
+- 在检查器区域使用Ctrl+滚轮快速切换标签页
 
-You can also install it manually:
-- Download the files.
-- Place the addon folder into your the root of your project.
-- In the project, go to `project_settings/plugins` and enable the plugin.
+安装方法：
+- 下载文件
+- 将插件文件夹放置于项目根目录
+- 在项目中进入项目设置/插件界面启用`inspector_tabs`
+
+当你在某个项目移除插件时，可能需要清理`project.godot`里的条目, 以确保项目设置整洁干净
