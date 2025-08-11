@@ -42,6 +42,8 @@ var UNKNOWN_ICON:Texture2D # Use to check if the loaded icon is an unknown icon
 
 var current_parse_category:String = ""
 
+var icon_cache : Dictionary
+
 func _can_handle(object):
 	# We support all objects in this example.
 	return true
@@ -125,7 +127,7 @@ func get_script_icon(script_path:String) -> Texture2D:
 
 	var file := FileAccess.open(script_path, FileAccess.READ)
 	if not file:
-		return null
+		return base_control.get_theme_icon("GDScript", "EditorIcons")
 	while not file.eof_reached():
 		var line := file.get_line().strip_edges()
 		if line.begins_with("@icon("):
@@ -141,7 +143,8 @@ func get_script_icon(script_path:String) -> Texture2D:
 				var image = texture.get_image()
 				image.resize(UNKNOWN_ICON.get_width(),UNKNOWN_ICON.get_height())
 				return ImageTexture.create_from_image(image)
-	return null
+	return base_control.get_theme_icon("GDScript", "EditorIcons")
+	
 func get_class_icon(c_name:String) -> Texture2D:
 	
 	#Get GDExtension Icon
@@ -178,12 +181,21 @@ func get_class_icon(c_name:String) -> Texture2D:
 func update_tabs() -> void:
 	tab_bar.clear_tabs()
 	for tab:String in tabs:
+		## Get an icon for the tab.
 		var load_icon:Texture2D
 		if tab.ends_with(".gd"):
-			load_icon = get_script_icon(tab)
-		if load_icon == null:
-			load_icon = get_class_icon(tab)
-		
+			load_icon = get_script_icon(tab) ## Get script custom icon or the GDScript icon
+		elif ClassDB.class_exists(tab):
+			if ClassDB.class_get_api_type(tab) == ClassDB.APIType.API_EXTENSION:
+				load_icon = get_extension_class_icon(tab)  ## Get GDExtension node icon
+			else:
+				load_icon = base_control.get_theme_icon(tab, "EditorIcons") ## Get editor node icon
+		else:
+			load_icon = get_script_class_icon(tab) ## Get script class icon
+			
+		if load_icon == UNKNOWN_ICON:
+			load_icon = base_control.get_theme_icon("NodeDisabled", "EditorIcons")
+			
 		if vertical_mode:
 			# Rotate the image for the vertical tab
 			if vertical_tab_side == 0:
@@ -385,3 +397,59 @@ func property_scrolling():
 		elif tab_idx == -1: # If theres properties at the top of the inspector without its own category.
 			category_idx += 1
 			tab_idx += 1
+
+
+func get_script_class_icon(tab) -> Texture2D:
+	if icon_cache.has(tab):
+		return icon_cache.get(tab)
+
+	for class_info in ProjectSettings.get_global_class_list():
+		if class_info["class"] == tab:
+			if ResourceLoader.exists(class_info["icon"]) == false:
+				break
+			var texture: Texture2D = ResourceLoader.load(class_info["icon"])
+			var image = texture.get_image()
+			image.resize(UNKNOWN_ICON.get_width(),UNKNOWN_ICON.get_height())
+
+			var icon = ImageTexture.create_from_image(image)
+			icon_cache = {tab:icon}
+			return icon
+
+	return base_control.get_theme_icon("NodeDisabled", "EditorIcons")
+
+
+func get_extension_class_icon(tab) -> Texture2D:
+	if icon_cache.has(tab):
+		return icon_cache.get(tab)
+		
+	for i in GDExtensionManager.get_loaded_extensions():
+		var cfg = load_gdextension_config(i)
+		var icons = cfg.get("icons")
+		if icons:
+			var path = icons.get(tab, "")
+			if ResourceLoader.exists(path):
+				var texture: Texture2D = ResourceLoader.load(path)
+				var image = texture.get_image()
+				image.resize(UNKNOWN_ICON.get_width(),UNKNOWN_ICON.get_height())
+
+				var icon = ImageTexture.create_from_image(image)
+				icon_cache = {tab : icon}
+				return icon
+	
+	return base_control.get_theme_icon("NodeDisabled", "EditorIcons")
+
+
+func load_gdextension_config(path: String) -> Dictionary:
+	var config = ConfigFile.new()
+	var err = config.load(path)
+	if err != OK:
+		print("Failed to load .gdextension file:", path)
+		return {}
+
+	var data = {}
+	for section in config.get_sections():
+		data[section] = {}
+		for key in config.get_section_keys(section):
+			data[section][key] = config.get_value(section, key)
+
+	return data
