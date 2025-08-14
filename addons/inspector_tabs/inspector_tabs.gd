@@ -170,6 +170,7 @@ func _parse_end(object: Object) -> void:
 
             # Get Node Name
             var category = i.get("tooltip_text").split("|")
+
             if category.size() > 1:
                 category = category[1]
             else:
@@ -246,7 +247,7 @@ func change_vertical_mode(mode:bool = vertical_mode):
         scroll_area.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
         var inspector = EditorInterface.get_inspector().get_parent()
         inspector.add_child(scroll_area)
-        inspector.move_child(scroll_area,3)
+        inspector.move_child(scroll_area, 3)
 
 
     if vertical_mode:
@@ -347,13 +348,16 @@ func tab_clicked(idx: int) -> void:
 ## Signal
 
 func scroll_to_tab(idx:int=0):
+    if idx >= tab_bar.tab_count:
+        idx = 0
+
     tab_bar.current_tab = idx
+
     if scroll_area:
         var tab_rect = tab_bar.get_tab_rect(idx)
         var max_tab_rect = tab_bar.get_tab_rect(tab_bar.tab_count - 1)
         var target_position = min(tab_rect.position.x, max_tab_rect.position.x)
 
-        # 计算滚动距离
         var distance = abs(scroll_area.scroll_horizontal - target_position)
         var scroll_speed = 800.0
         var duration = distance / scroll_speed
@@ -362,6 +366,7 @@ func scroll_to_tab(idx:int=0):
         tween.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE)
         tween.tween_property(scroll_area, "scroll_horizontal", target_position, duration).from_current()
         tab_clicked(idx)
+
 
 func _swtich_tab(event):
     if event is InputEventMouseButton and event.pressed:
