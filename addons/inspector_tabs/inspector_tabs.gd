@@ -2,8 +2,8 @@ extends EditorInspectorPlugin
 
 const KEY_TAB_LAYOUT = "inspector_tabs/tab_layout"
 const KEY_TAB_STYLE = "inspector_tabs/tab_style"
-const KEY_TAB_PROPERTY_MODE = "inspector_tabs/tab_property_mode"
 const KEY_MERGE_ABSTRACT_CLASS_TABST = "inspector_tabs/merge_abstract_class_tabs"
+const KEY_ENABLED_MEMORY_CHOICES = "inspector_tabs/enabled_memory_choices"
 
 
 enum TabLayouts{
@@ -15,11 +15,6 @@ enum TabStyles{
     Text_And_Icon,
     Text_Only,
     Icon_Only,
-}
-
-enum TabPropertyModes{
-    Tabbed,
-    Jump_Scroll,
 }
 
 
@@ -41,8 +36,8 @@ var tab_bar : TabBar
 # Mode
 var tab_layout : int
 var tab_style : int
-var property_mode : int
 var merge_abstract_class_tabs : bool
+var enabled_memory_choices : bool
 
 # Tab position
 var vertical_mode : bool = true
@@ -51,8 +46,8 @@ var vertical_tab_side = 1
 # are the search bar in use
 var is_filtering = false
 
-var current_category : String = ""
 var current_parse_category:String = ""
+
 
 # All categories/subclasses in the inspector
 var categories = []
@@ -60,11 +55,12 @@ var categories = []
 var tabs = []
 # Finish adding categories
 var categories_finish = false
-# Stops the TabBar from changing tab
-var tab_can_change = false
 
 var UNKNOWN_ICON : Texture2D = EditorInterface.get_base_control().get_theme_icon("", "EditorIcons")
 var icon_cache : Dictionary
+
+var current_node_class = ""
+var memory_choices_data : Dictionary = {}
 
 
 func enter():
@@ -81,11 +77,10 @@ func enter():
 
     tab_layout = ProjectSettings.get_setting(KEY_TAB_LAYOUT, 0)
     tab_style = ProjectSettings.get_setting(KEY_TAB_STYLE)
-    property_mode = ProjectSettings.get_setting(KEY_TAB_PROPERTY_MODE)
     merge_abstract_class_tabs = ProjectSettings.get_setting(KEY_MERGE_ABSTRACT_CLASS_TABST)
+    enabled_memory_choices = ProjectSettings.get_setting(KEY_ENABLED_MEMORY_CHOICES)
 
     filter_bar.text_changed.connect(_on_filter_text_changed)
-    property_scroll_bar.scrolling.connect(_on_property_scrolling)
 
 
 func exit():
@@ -158,10 +153,9 @@ func _parse_category(object: Object, category: String) -> void:
         categories.clear()
         tabs.clear()
 
-        tab_can_change = false
         tab_bar.clear_tabs()
-
-    if current_parse_category != "Node": # This line is needed because when selecting multiple nodes the refcounted class will be the last tab.
+    # This line is needed because when selecting multiple nodes the refcounted class will be the last tab.
+    if current_parse_category != "Node":
         current_parse_category = category
 
 # Finished getting inspector categories
@@ -194,18 +188,9 @@ func _parse_end(object: Object) -> void:
             var category = "Unknown"
             tabs.append(category)
             categories.append(category)
+
     categories_finish = true
     update_tabs() # load tab
-    tab_can_change = true
-
-    var tab = tabs.find(current_category)
-    if tab == -1:
-        tab_clicked(0)
-        tab_selected(0)
-        tab_bar.current_tab = 0
-    else:
-        tab_clicked(tab)
-        tab_bar.current_tab = tab
 
 
 func is_new_tab(category:String) -> bool:
@@ -241,7 +226,6 @@ func change_vertical_mode(mode:bool = vertical_mode):
 
     tab_bar.tab_clicked.connect(tab_clicked)
     tab_bar.gui_input.connect(_on_tab_bar_gui_input)
-    tab_bar.tab_selected.connect(tab_selected)
     tab_bar.resized.connect(_on_tab_resized)
 
     update_tabs()
@@ -284,7 +268,7 @@ func change_vertical_mode(mode:bool = vertical_mode):
         viewer_container.custom_minimum_size.x = 0
 
 
-func add_category(tab_name, load_icon):
+func add_tab_category(tab_name, load_icon):
     if vertical_mode:
         # Rotate the image for the vertical tab
         if vertical_tab_side == 0:
@@ -312,26 +296,27 @@ func update_tabs() -> void:
     for tab : String in tabs:
         var load_icon = get_tab_icon(tab)
         var tab_name = tab.split("/")[-1]
-        add_category(tab_name, load_icon)
+        add_tab_category(tab_name, load_icon)
 
-    if tab_bar.tab_count > 0:
-        _on_click_node(0)
+    var icon = EditorInterface.get_base_control().get_theme_icon("DebugNext", "EditorIcons")
+    add_tab_category("All", icon)
+    tab_bar.move_tab(tab_bar.tab_count-1, 0)
+    tabs.insert(0, "All")
 
-    # Only Tabbed Mode
-    if property_mode == TabPropertyModes.Tabbed:
-        var icon = EditorInterface.get_base_control().get_theme_icon("DebugNext", "EditorIcons")
-        add_category("All", icon)
-        tab_bar.move_tab(tab_bar.tab_count-1, 0)
-        tabs.insert(0, "All")
-
-
-func tab_selected(tab):
-    if tab_can_change:
-        current_category = tabs[tab]
+    if enabled_memory_choices and tabs.size() > 1:
+        var memory_idx = memory_choices_data.get(tabs[1], 0)
+        scroll_to_tab(memory_idx)
+    else:
+        scroll_to_tab(0)
 
 
-func tab_clicked(tab: int) -> void:
-    if tab == 0:
+func tab_clicked(idx: int) -> void:
+    if enabled_memory_choices:
+        if tabs.size() > 1:
+            var tab_name = tabs[1]
+            memory_choices_data.set(tab_name, idx)
+
+    if idx == 0:
         # Show all properties
         for i in property_container.get_children():
             i.visible = true
@@ -340,53 +325,43 @@ func tab_clicked(tab: int) -> void:
     if is_filtering:
         return
 
-    if property_mode == TabPropertyModes.Tabbed: # Tabbed
-        var category_idx = -1
-        var tab_idx = 0
+    var category_idx = -1
+    var tab_idx = 0
 
-        # Show nececary properties
-        for i in property_container.get_children():
-            if i.get_class() == "EditorInspectorCategory":
-                category_idx += 1
-                if is_new_tab(categories[category_idx]):
-                    tab_idx += 1
+    # Show nececary properties
+    for i in property_container.get_children():
+        if i.get_class() == "EditorInspectorCategory":
+            category_idx += 1
+            if is_new_tab(categories[category_idx]):
+                tab_idx += 1
 
-            elif tab_idx == 0: # If theres properties at the top of the inspector without its own category.
-                category_idx += 1
-                if is_new_tab(categories[category_idx]):
-                    tab_idx += 1
-            if tab_idx != tab:
-                i.visible = false
-            else:
-                i.visible = true
-    elif property_mode == TabPropertyModes.Jump_Scroll: # Jump Scroll
-        var category_idx = -1
-        var tab_idx = -1
-
-        # Show nececary properties
-        for i in property_container.get_children():
-            if i.get_class() == "EditorInspectorCategory":
-                category_idx += 1
-                if is_new_tab(categories[category_idx]):
-                    tab_idx += 1
-                if tab_idx == tab:
-                    var list_size_y =  EditorInterface.get_inspector().get_children().filter(func(node:Node):return node is VBoxContainer)[0].size.y
-                    property_scroll_bar.value = (i.position.y+property_container.position.y)/list_size_y*property_scroll_bar.max_value
-                    break
-            elif tab_idx == -1 and tab == 0: # If theres properties at the top of the inspector without its own category.
-                property_scroll_bar.value = 0
-                break
-
+        elif tab_idx == 0: # If theres properties at the top of the inspector without its own category.
+            category_idx += 1
+            if is_new_tab(categories[category_idx]):
+                tab_idx += 1
+        if tab_idx != idx:
+            i.visible = false
+        else:
+            i.visible = true
 
 ## Signal
 
-func _on_click_node(idx:int=0):
+func scroll_to_tab(idx:int=0):
     tab_bar.current_tab = idx
-    tab_clicked(idx)
     if scroll_area:
-        scroll_area.scroll_horizontal = 0
-        scroll_area.scroll_vertical = 0
+        var tab_rect = tab_bar.get_tab_rect(idx)
+        var max_tab_rect = tab_bar.get_tab_rect(tab_bar.tab_count - 1)
+        var target_position = min(tab_rect.position.x, max_tab_rect.position.x)
 
+        # 计算滚动距离
+        var distance = abs(scroll_area.scroll_horizontal - target_position)
+        var scroll_speed = 800.0
+        var duration = distance / scroll_speed
+
+        var tween = scroll_area.create_tween()
+        tween.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE)
+        tween.tween_property(scroll_area, "scroll_horizontal", target_position, duration).from_current()
+        tab_clicked(idx)
 
 func _swtich_tab(event):
     if event is InputEventMouseButton and event.pressed:
@@ -400,10 +375,7 @@ func _swtich_tab(event):
                         tab_bar.current_tab = min(tab_bar.tab_count-1, tab_bar.current_tab+1)
                         tab_clicked(tab_bar.current_tab)
 
-                var tab_rect = tab_bar.get_tab_rect(tab_bar.current_tab)
-                var tween = scroll_area.create_tween()
-                tween.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUART)
-                tween.tween_property(scroll_area, "scroll_horizontal", tab_rect.position.x, 0.32).from_current()
+                scroll_to_tab(tab_bar.current_tab)
 
 
 func _on_tab_bar_gui_input(event):
@@ -427,7 +399,12 @@ func _on_filter_text_changed(text:String):
         is_filtering = true
     else:
         is_filtering = false
-        tab_clicked(tab_bar.current_tab)
+
+        if enabled_memory_choices and tabs.size() > 1:
+            var memory_idx = memory_choices_data.get(tabs[1], 0)
+            scroll_to_tab(memory_idx)
+        else:
+            scroll_to_tab(0)
 
 
 func _on_inspector_resized():
@@ -439,7 +416,6 @@ func _on_inspector_resized():
 func _on_project_settings_changed() -> void:
     tab_layout = ProjectSettings.get_setting(KEY_TAB_LAYOUT, 0)
     tab_style = ProjectSettings.get_setting(KEY_TAB_STYLE)
-    property_mode = ProjectSettings.get_setting(KEY_TAB_PROPERTY_MODE)
     merge_abstract_class_tabs = ProjectSettings.get_setting(KEY_MERGE_ABSTRACT_CLASS_TABST)
 
     if tab_layout == 0:
@@ -448,34 +424,6 @@ func _on_project_settings_changed() -> void:
     else:
         if vertical_mode != true:
             change_vertical_mode(true)
-
-
-func _on_property_scrolling():
-    if property_mode != 1 or tab_bar.tab_count == 0 or is_filtering:
-        return
-
-    var category_idx = -1
-    var tab_idx = -1
-    var category_y = - INF
-
-    if property_scroll_bar.value <= 1:
-        tab_bar.current_tab = 0
-        return
-
-    for i in property_container.get_children():
-        if i.get_class() == "EditorInspectorCategory":
-            var list_size_y =  EditorInterface.get_inspector().get_children().filter(func(node:Node):return node is VBoxContainer)[0].size.y
-            if (i.position.y+property_container.position.y-EditorInterface.get_inspector().size.y/3) <= property_scroll_bar.value/property_scroll_bar.max_value*list_size_y:
-                category_y = property_container.position.y
-            else:
-                tab_bar.current_tab = max(tab_idx,0)
-                break
-            category_idx += 1
-            if is_new_tab(categories[category_idx]):
-                tab_idx += 1
-        elif tab_idx == -1: # If theres properties at the top of the inspector without its own category.
-            category_idx += 1
-            tab_idx += 1
 
 
 func _on_tab_resized():
@@ -487,6 +435,7 @@ func _on_tab_resized():
 
 
 ## Get Icon
+
 
 func get_tab_icon(tab) -> Texture2D:
     var load_icon : Texture2D

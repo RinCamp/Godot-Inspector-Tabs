@@ -28,18 +28,19 @@ func load_project_settings():
         _Tabs.KEY_TAB_LAYOUT, _Tabs.TabLayouts.Horizontal,
         TYPE_INT,  PROPERTY_HINT_ENUM, "Horizontal,Vertical"
     )
+
     _set_project_cfg(
         _Tabs.KEY_TAB_STYLE, _Tabs.TabStyles.Text_And_Icon,
         TYPE_INT,  PROPERTY_HINT_ENUM, "Text and Icon,Text Only,Icon Only"
     )
 
     _set_project_cfg(
-        _Tabs.KEY_TAB_PROPERTY_MODE, _Tabs.TabPropertyModes.Tabbed,
-        TYPE_INT,  PROPERTY_HINT_ENUM, "Tabbed,Jump Scroll"
+        _Tabs.KEY_MERGE_ABSTRACT_CLASS_TABST, false,
+        TYPE_BOOL,
     )
 
     _set_project_cfg(
-        _Tabs.KEY_MERGE_ABSTRACT_CLASS_TABST, false,
+        _Tabs.KEY_ENABLED_MEMORY_CHOICES, true,
         TYPE_BOOL,
     )
 
@@ -50,8 +51,8 @@ func clear_project_settings():
     var _all_settings = [
         _Tabs.KEY_TAB_LAYOUT,
         _Tabs.KEY_TAB_STYLE,
-        _Tabs.KEY_TAB_PROPERTY_MODE,
         _Tabs.KEY_MERGE_ABSTRACT_CLASS_TABST,
+        _Tabs.KEY_ENABLED_MEMORY_CHOICES,
     ]
     for key in _all_settings:
         if ProjectSettings.has_setting(key):
