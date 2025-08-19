@@ -16,9 +16,6 @@ Vertical layout           |  Horizontal layout
 - Support custom script classes and GDExtension classes.
 - Favorite property will be shown in all tabs.
 
-# Known issues
-- When opening your project, the `search help` window will pop up for a split second. This is to load the GDExtension node icons.
-
 # Installing
 You can install it from the [asset library](https://godotengine.org/asset-library/asset/3951).
 
